@@ -1,0 +1,411 @@
+Program.Sub.ScreenSU.Start
+Gui.frmStatement..Create
+Gui.frmStatement..Caption("AR Statement Emailer")
+Gui.frmStatement..Size(5955,2700)
+Gui.frmStatement..MinX(0)
+Gui.frmStatement..MinY(0)
+Gui.frmStatement..Position(0,0)
+Gui.frmStatement..BackColor(-2147483633)
+Gui.frmStatement..MousePointer(0)
+Gui.frmStatement..Event(UnLoad,frmStatement_UnLoad)
+Gui.frmStatement.cmdGo.Create(Button)
+Gui.frmStatement.cmdGo.Size(1155,375)
+Gui.frmStatement.cmdGo.Position(4470,1110)
+Gui.frmStatement.cmdGo.Caption("Go")
+Gui.frmStatement.cmdGo.Event(Click,cmdGo_Click)
+Gui.frmStatement.dtpDate.Create(DatePicker)
+Gui.frmStatement.dtpDate.Size(2760,285)
+Gui.frmStatement.dtpDate.Position(255,405)
+Gui.frmStatement.fraOption.Create(Frame)
+Gui.frmStatement.fraOption.Size(4170,750)
+Gui.frmStatement.fraOption.Position(225,870)
+Gui.frmStatement.fraOption.Caption("Email Options")
+Gui.frmStatement.optCRM.Create(Option)
+Gui.frmStatement.optCRM.Size(1575,255)
+Gui.frmStatement.optCRM.Position(2505,345)
+Gui.frmStatement.optCRM.Caption("CRM")
+Gui.frmStatement.optCRM.Parent("fraOption")
+Gui.frmStatement.optCustomer.Create(Option)
+Gui.frmStatement.optCustomer.Size(2310,255)
+Gui.frmStatement.optCustomer.Position(90,360)
+Gui.frmStatement.optCustomer.Caption("Customer Master")
+Gui.frmStatement.optCustomer.Parent("fraOption")
+Gui.frmReview..Create
+Gui.frmReview..Caption("AR Statement Review")
+Gui.frmReview..Size(15360,11310)
+Gui.frmReview..MinX(0)
+Gui.frmReview..MinY(0)
+Gui.frmReview..Position(0,0)
+Gui.frmReview..BackColor(-2147483633)
+Gui.frmReview..MousePointer(0)
+Gui.frmReview..Event(UnLoad,frmReview_UnLoad)
+Gui.frmReview.gsgcReview.Create(GsGridControl)
+Gui.frmReview.gsgcReview.Size(14790,9855)
+Gui.frmReview.gsgcReview.Position(165,105)
+Gui.frmReview.gsgcReview.Event(RowCellClick,gsgcReview_RowCellClick)
+Gui.frmReview.cmdGenEmail.Create(Button)
+Gui.frmReview.cmdGenEmail.Size(1425,375)
+Gui.frmReview.cmdGenEmail.Position(225,10110)
+Gui.frmReview.cmdGenEmail.Caption("Generate Emails")
+Gui.frmReview.cmdGenEmail.Event(Click,cmdGenEmail_Click)
+Gui.frmStatementView..Create
+Gui.frmStatementView..Caption("AR Statement View")
+Gui.frmStatementView..Size(15360,14475)
+Gui.frmStatementView..MinX(0)
+Gui.frmStatementView..MinY(0)
+Gui.frmStatementView..Position(0,0)
+Gui.frmStatementView..BackColor(-2147483633)
+Gui.frmStatementView..MousePointer(0)
+Gui.frmStatementView..Event(UnLoad,frmStatementView_UnLoad)
+Gui.frmStatementView.htmlView.Create(HtmlContainer)
+Gui.frmStatementView.htmlView.Size(14955,13755)
+Gui.frmStatementView.htmlView.Position(45,45)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'Callwrapper parameters
+'3050 - Print customer statements - AR0140GI
+'Parameters:
+'Start
+'End
+'Date
+'Attn
+'"Y": Yes
+'"N": No
+'Country
+'"Y": Yes
+'"N": No
+'Total
+'"Y": Yes
+'"N": No
+'Heading Date
+'Beginning Branch
+'Ending Branch
+'Branch
+'"Y": Yes
+'"N": No
+'Print Zero
+'"Y": Yes
+'"N": No
+
+'This will check AR open Items to see if the customer has an outstanding balance and if so an AR Statement will be emailed to the company
+v.Local.sfilecheck.Declare(string)
+v.Local.bCheck.Declare(boolean)
+v.Local.lret.Declare(long)
+
+'set default on form
+gui.frmStatement.optCustomer.Value(1)
+f.Intrinsic.String.Concat(v.Caller.TempDir,"\ARStmnt.txt",v.Local.sfilecheck)
+f.Intrinsic.File.Exists(v.Local.sfilecheck,v.Local.bCheck)
+f.Intrinsic.Control.If(v.Local.bCheck)
+	f.Intrinsic.UI.Msgbox("Previous statement file exists, do you want to reload it?","File Exists",4,v.Local.lret)
+	f.Intrinsic.Control.If(v.Local.lret,=,6)
+		f.Intrinsic.Control.CallSub(load_ARReview)
+	f.Intrinsic.Control.Else
+		gui.frmStatement..Show
+	f.Intrinsic.Control.EndIf
+f.Intrinsic.Control.Else
+	gui.frmStatement..Show
+f.Intrinsic.Control.EndIf
+Program.Sub.Main.End
+
+Program.Sub.load_ARReview.Start
+v.Local.sFile.Declare(string)
+v.Local.sContent.Declare(string)
+v.Local.sval.Declare(string)
+v.Local.lLen.Declare(long)
+f.Intrinsic.String.Concat(v.Caller.TempDir,"\ARStmnt.txt",v.Local.sFile)
+f.Intrinsic.File.File2String(v.Local.sFile,v.Local.sContent)
+f.Intrinsic.String.Replace(v.Local.sContent,v.Ambient.DblQuote,"",v.Local.sContent)
+f.Intrinsic.String.Replace(v.Local.sContent,v.Ambient.NewLine,"!*!",v.Local.sContent)
+f.Intrinsic.String.Right(v.Local.sContent,3,v.Local.sval)
+f.Intrinsic.Control.If(v.Local.sval,=,"!*!")
+	v.Local.lLen.Set(v.Local.sContent.Length)
+	f.Intrinsic.Math.Sub(v.Local.lLen,3,v.Local.lLen)
+	f.Intrinsic.String.Left(v.Local.sContent,v.Local.lLen,v.Local.sContent)
+f.Intrinsic.Control.EndIf
+f.Data.DataTable.CreateFromString("dtAR",v.Local.sContent,"Email*!*Customer*!*CustomerName*!*CustomerEmail*!*CustomerAttn*!*Statement*!*Balance*!*DateRan","Boolean*!*String*!*String*!*String*!*String*!*String*!*Float*!*Date",",","!*!",true)
+
+gui.frmReview.gsgcReview.DataSource("dtAR")
+gui.frmReview.gsgcReview.AddGridviewFromDatatable("gvAR","dtAR")
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","CustomerAttn","Visible","False")
+
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","Statement","CellForeColor",v.Color.Blue)
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","Statement","CellFontUnderline","true")
+
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","Statement","AllowEdit","False")
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","CustomerEmail","AllowEdit","True")
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","Email","AllowEdit","True")
+
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","CustomerName","Caption","Customer Name")
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","CustomerEmail","Caption","Customer Eamil")
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","DateRan","Caption","Date Ran")
+
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","Email","ReadOnly","False")
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","Balance","ReadOnly","False")
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","CustomerEmail","ReadOnly","False")
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","Statement","ReadOnly","True")
+
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","Balance","DisplayCustomNumeric","$###,###,###.00")
+gui.frmReview.gsgcReview.SetColumnProperty("gvAR","DateRan","DisplayCustomDatetime","d")
+
+gui.frmReview.gsgcReview.SetGridviewProperty("gvAR","OptionsViewRowAutoHeight","True")
+
+gui.frmReview.gsgcReview.anchor(15)
+gui.frmReview.cmdGenEmail.anchor(6)
+gui.frmReview..Show
+Program.Sub.load_ARReview.End
+
+Program.Sub.gsgcReview_RowCellClick.Start
+V.Local.sError.Declare(String)
+V.Local.sFQP.Declare(String)
+V.Local.iXPos.Declare(Long)
+V.Local.iYPos.Declare(Long)
+v.Local.sStmntDir.Declare(string)
+f.Intrinsic.String.Concat(v.Caller.PluginsDir,"\Statements",v.Local.sStmntDir)
+Function.Intrinsic.Control.SelectCase(V.Args.Column)
+	Function.Intrinsic.Control.Case("Statement")
+		f.Intrinsic.Control.If(v.Args.cellvalue.Trim,<>,"")
+			'blanking out view
+			Gui.frmStatementView.htmlView.Navigate("about:blank")
+	
+			'Forming FQP
+			v.Local.sFQP.Set(v.args.cellvalue)
+			'Getting mouse position to set position of pop up screen
+			F.Intrinsic.API.GetMousePosition(V.Local.iXPos,V.Local.iYPos)
+	
+			'Shifting position over on x-axis by a small amount
+			F.Intrinsic.Math.Add(V.Local.iXPos,40,V.Local.iXPos)
+	
+			'Converting to twips
+	'		Function.Intrinsic.Math.Mult(V.Local.iXPos,15,V.Local.iXPos)
+	'		Function.Intrinsic.Math.Mult(V.Local.iYPos,-15,V.Local.iYPos)
+	
+			'Setting form position
+			Gui.frmStatementView..Position(V.Local.iXPos,V.Local.iYPos)
+			Gui.frmStatementView..Show
+			'loading PDF to HTML container
+			Gui.frmStatementView.htmlView.Navigate(V.Local.sFQP)
+		f.Intrinsic.Control.EndIf
+Function.Intrinsic.Control.EndSelect
+Program.Sub.gsgcReview_RowCellClick.End
+
+Program.Sub.cmdGo_Click.Start
+f.Intrinsic.Control.Try
+	gui.frmStatement..Visible(False)
+	f.Intrinsic.UI.InvokeWaitDialog("Generating statements, please wait.")
+	V.Local.sError.Declare(String)
+	V.Local.sSql.Declare(String)
+	V.Local.sDate.Declare(String)
+	V.Local.sFileDir.Declare(String)
+	V.Local.bExists.Declare(Boolean)
+	v.Local.ddate.Declare(date)
+	v.Local.ddate.Set(v.Screen.frmStatement!dtpDate.Value)
+	
+	F.ODBC.Connection!conx.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+	f.Data.DataTable.CreateFromSQL("dtInv","conx","Select Distinct Customer, Invoice from V_AR_OPEN_ITEMS",true)
+	f.Data.DataTable.Create("dtRows",true)
+	f.Data.DataTable.AddColumn("dtRows","Email","Boolean")
+	f.Data.DataTable.AddColumn("dtRows","Customer","String")
+	f.Data.DataTable.AddColumn("dtRows","CustomerName","String")
+	f.Data.DataTable.AddColumn("dtRows","CustomerEmail","string")
+	f.Data.DataTable.AddColumn("dtRows","CustomerAttn","string")
+	f.Data.DataTable.AddColumn("dtRows","Statement","string")
+	f.Data.DataTable.AddColumn("dtRows","Balance","float")
+	f.Data.DataTable.AddColumn("dtRows","DateRan","Date")
+	
+	f.Data.DataTable.CreateFromSQL("dtCust","conx","Select Customer, name_customer, '0' as balance from V_CUSTOMER_MASTER",true)
+	
+	'Set directory & create if it does not exists
+	F.Intrinsic.String.Build("{0}\Statements",v.Caller.PluginsDir,v.Local.sFileDir)
+	F.Intrinsic.File.DirExists(v.Local.sFileDir,v.Local.bExists)
+	F.Intrinsic.Control.If(v.local.bExists,=,False)
+		F.Intrinsic.File.CreateDir(v.Local.sFileDir)
+	F.Intrinsic.Control.Endif
+	
+	'Run subroutines
+	f.Intrinsic.Control.CallSub(checkBalance)
+	F.Intrinsic.Control.CallSub(createStatements,"sFileDir",v.Local.sFileDir,"dDate",v.Screen.frmStatement!dtpDate.Value)
+	f.Intrinsic.UI.CloseWaitDialog
+	F.Intrinsic.Control.CallSub(load_ARReview)
+f.Intrinsic.Control.Catch
+	f.Intrinsic.String.Concat("Error in routine cmdgo_click: ",v.Ambient.ErrorDescription,v.Local.sError)
+	f.Intrinsic.UI.Msgbox(v.Local.sError)
+	f.ODBC.Connection!conx.Close
+	f.Intrinsic.Control.End
+f.Intrinsic.Control.EndTry
+Program.Sub.cmdGo_Click.End
+
+Program.Sub.createStatements.Start
+f.Intrinsic.Control.Try
+	v.Local..BulkDeclareString(sCustomer,sCustomerEmail,sCustomerName,sDate,sDateStamp,sError,sFilePath,sLogo,sParam,sRecipient,sSavePath,sTitles,sVal)
+	v.Local..BulkDeclareLong(i,iret,lBIRunID,lLogID)
+	v.Local.dDateRan.Declare(date)
+	v.Local.fBalance.Declare(float)
+	
+	'Set Variables
+	F.Global.BI.GetRunID(V.Local.lBIRunID)
+	F.Global.BI.StartLogging(V.Local.lBIRunID,562,0,"",V.Local.lLogID)
+	v.Local.dDateRan.Set(v.Screen.frmStatement!dtpDate.value)
+	f.Intrinsic.String.Format(v.Ambient.Date,"YYYYMMDD",v.Local.sDateStamp)
+	F.Intrinsic.String.Format(v.args.dDate,"MMDDYY",v.Local.sDate)
+	
+	'Get Titles
+	f.ODBC.Connection!conx.executeandreturn("select TEXT1 from V_OP_HEADER WHERE ID='401069' OR ID='401070' OR ID='401071'",v.Local.sTitles)
+	f.Intrinsic.String.Split(v.Local.sTitles,"#$#",v.Local.sTitles)
+	v.Local.sTitles.RedimPreserve(0,2)
+	
+	f.Intrinsic.Control.For(v.Local.i,0,v.DataTable.dtCust.RowCount--,1)
+		'Set More Variables
+		v.Local.sCustomer.Set(v.DataTable.dtCust(v.Local.i).Customer!Fieldvaltrim)
+		v.Local.sCustomerName.Set(v.DataTable.dtCust(v.local.i).Name_customer!fieldvaltrim)
+		v.Local.fBalance.Set(v.DataTable.dtCust(v.Local.i).Balance!fieldvalfloat)
+		F.Intrinsic.String.Build("{0}\{1}_{2}.pdf",V.Args.sFileDir,v.Local.sDateStamp,v.Local.sCustomer,V.Local.sFilePath)
+		
+		'Determine which option is check and grab the email
+		F.Intrinsic.Control.CallSub(getContacts,"CustomerID",v.Local.sCustomer)'Expects Customer ID to be passed and Returns a boolean in a arg named Exists if contacts exist against customer
+		
+		f.Intrinsic.Control.If(v.Local.fBalance,>,0)
+			'Create a statement, balance is greater than 0
+			F.Intrinsic.String.Build("{0}!*!{0}!*!{1}!*!Y!*!N!*!N!*!{3}!*!{2}!*!{2}!*!N!*!N",v.Local.sCustomer,V.local.sDate," ",V.Local.sDate,V.Local.sParam)
+			F.Global.General.CallWrapperSyncBIO(3050,v.Local.sParam)
+			'V.Local.sParam.Set("Terminal*!*ReportID*!*ATTN*!*Title1*!*Title2*!*Title3*!*Title4*!*Logo")
+			'F.Intrinsic.String.Build("{0}*!*000562*!*Y*!*",v.Local.sTitles(0),"*!*",v.Local.sTitles(1),"*!*",v.Local.sTitles(2),"Total*!*{1}",V.Caller.Terminal,"MYLOGO",V.Local.sVal)
+			'F.Global.BI.RunReportPreProcessor(V.Local.lBIRunID,V.Local.lLogID,V.Local.sParam,V.Local.sVal,"",4,True,"",-1,"",0,V.Local.sFilePath,"",V.Local.iRet)
+			
+			V.Local.sParam.Set("Terminal*!*ReportID*!*ATTN*!*Title1*!*Title2*!*Title3*!*Title4*!*Logo")
+			F.Intrinsic.String.Build("{0}*!*000562*!*Y*!*{1}*!*{2}*!*{3}*!*{4}*!*{5}",V.Caller.Terminal,"Current",V.Local.sTitles(0),V.Local.sTitles(1),V.Local.sTitles(2),V.local.slogo.trim,V.Local.sVal)
+			F.Global.BI.RunReportPreProcessor(V.Local.lBIRunID,V.Local.lLogID,V.Local.sParam,V.Local.sVal,"",4,True,"",-1,"",0,V.Local.sFilePath,"",V.Local.iRet)
+			
+			f.Data.DataTable.AddRow("dtRows","Email",True,"Customer",v.Local.sCustomer,"CustomerName",v.Local.sCustomerName.Trim,"CustomerEmail",v.Args.Contacts,"Statement",v.Local.sFilePath,"DateRan",v.Local.dDateRan,"Balance",v.Local.fBalance)
+			
+		f.Intrinsic.Control.Else
+			'Do not create a statement, just add a row and show the balance
+			f.Data.DataTable.AddRow("dtRows","Email",false,"Customer",v.Local.sCustomer,"CustomerName",v.Local.sCustomerName.Trim,"CustomerEmail",v.Args.Contacts,"Statement","","DateRan",v.Local.dDateRan,"Balance",v.Local.fBalance)
+		f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.Next(v.Local.i)
+	F.Global.BI.StopLogging(V.Local.lLogID)
+	f.Intrinsic.String.Concat(v.Caller.TempDir,"\ARStmnt.txt",v.Local.sSavePath)
+	f.Data.DataTable.SaveToCSV("dtRows",v.Local.sSavePath,false)	
+f.Intrinsic.Control.Catch
+	f.Intrinsic.String.Concat("Error in create statements: ",v.Local.sCustomerName.Set(v.DataTable.dtCust(v.local.i).Name_customer!fieldvaltrim)," ",v.Ambient.ErrorDescription,v.Local.sError)
+	f.Intrinsic.UI.Msgbox(v.Local.sError)
+	f.ODBC.Connection!conx.Close
+	f.Intrinsic.Control.End
+f.Intrinsic.Control.EndTry
+Program.Sub.createStatements.End
+
+Program.Sub.getContacts.Start
+f.Intrinsic.Control.Try
+	V.Local.sError.Declare(String)
+	V.Local.sSql.Declare(String)
+	v.Local.sContacts.Declare(string)
+	'Checking tabbe to see if any e-invoice contacts exist for customer
+	F.Intrinsic.Control.If(V.Screen.frmStatement!optCRM.Value,=,1)
+		f.Intrinsic.String.Build("select CUST, TYPE, ID, CID, NAME, EMAIL1, E_PROG_SETTINGS from CONTACT inner join CRM_CONTACT_AUX on CONTACT.ALT_ID = CRM_CONTACT_AUX.CID and CRM_CONTACT_AUX.E_PROG_SETTINGS = 4 Where CUST = '{0}'",V.Args.CustomerID.PSQLFriendly,V.Local.sSql)
+		f.Data.DataTable.CreateFromSQL("dtContacts","conx",v.Local.sSql,true)
+		f.Intrinsic.Control.For(v.Local.i,0,v.DataTable.dtContacts.RowCount--,1)
+			f.Intrinsic.String.Concat(v.Local.sContacts,v.DataTable.dtContacts(v.Local.i).EMAIL1!Fieldvaltrim,";",v.Local.sContacts)
+		f.Intrinsic.Control.Next(v.Local.i)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.Build("select EMAIL from V_CUSTOMER_MASTER LEFT JOIN V_CUSTOMER_SALES ON V_CUSTOMER_MASTER.CUSTOMER= V_CUSTOMER_SALES.CUSTOMER WHERE V_CUSTOMER_MASTER.CUSTOMER =  '{0}'",v.Args.CustomerID.PSQLFriendly,V.Local.sSql)
+		f.ODBC.Connection!conx.executeandreturn(v.Local.sSql,v.Local.sContacts)
+	f.Intrinsic.Control.EndIf
+	f.Intrinsic.Variable.AddRV("Contacts",v.Local.sContacts)
+f.Intrinsic.Control.Catch
+	f.Intrinsic.String.Concat("Error in getContacts: ",v.Args.CustomerID," ",v.Ambient.ErrorDescription,". Program will now exit.",v.Local.sError)
+	f.ODBC.Connection!conx.Close
+	f.Intrinsic.Control.End
+f.Intrinsic.Control.EndTry
+
+Program.Sub.getContacts.End
+
+Program.Sub.checkBalance.Start
+f.Intrinsic.Control.Try
+	v.Local..BulkDeclareString(sBalRet,sCustomer,serror,sInvoice,sRowRet,sSearch)
+	v.Local.fbalance.Declare(float)
+	v.Local.i.Declare(long)
+	f.Intrinsic.Control.For(v.Local.i,0,v.DataTable.dtInv.RowCount--,1)
+		v.Local.sCustomer.Set(v.DataTable.dtInv(v.Local.i).Customer!fieldvaltrim)
+		v.Local.sInvoice.Set(v.DataTable.dtInv(v.local.i).Invoice!fieldvaltrim)
+		f.Intrinsic.Control.If(v.Local.sInvoice,<>,"")
+			f.Global.Accounting.GetARItemStatus(v.Local.sCustomer,v.Local.sInvoice,v.Local.sBalRet)
+			f.Intrinsic.String.Split(v.Local.sBalRet,"*!*",v.Local.sBalRet)
+			v.Local.sBalRet.RedimPreserve(0,2)
+			F.Intrinsic.Control.If(V.Local.sBalRet(2).trim,<>,"")
+				f.Intrinsic.String.Build("Customer='{0}'",v.Local.sCustomer,v.Local.sSearch)
+				f.Data.DataTable.Select("dtCust",v.Local.sSearch,v.local.sRowRet)
+				f.Intrinsic.Control.If(v.Local.sRowRet.Trim,<>,"***NORETURN***")
+					v.Local.fbalance.Set(v.DataTable.dtCust(v.Local.sRowRet).Balance!fieldvalfloat)
+					f.Intrinsic.Math.Add(v.Local.fbalance,v.Local.sBalRet(2),v.Local.fbalance)
+					f.Data.DataTable.SetValue("dtCust",v.Local.sRowRet,"Balance",v.Local.fbalance)
+				f.Intrinsic.Control.EndIf
+			f.Intrinsic.Control.EndIf
+		f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.Next(v.Local.i)
+f.Intrinsic.Control.Catch
+	f.Intrinsic.String.Concat("Error in check balance: Invoice-",v.DataTable.dtInv(v.local.i).Invoice!fieldvaltrim," ",v.Ambient.ErrorDescription,v.Local.serror)
+	f.Intrinsic.UI.Msgbox(v.Local.serror)
+	f.ODBC.Connection!conx.Close
+	f.Intrinsic.Control.end
+f.Intrinsic.Control.EndTry
+Program.Sub.checkbalance.End
+
+Program.Sub.Unload.Start
+F.ODBC.Connection!conx.Close
+F.Intrinsic.Control.End
+Program.Sub.Unload.End
+
+Program.Sub.frmStmntEmail_UnLoad.Start
+f.ODBC.Connection!conx.Close
+f.Intrinsic.Control.End
+Program.Sub.frmStmntEmail_UnLoad.End
+
+Program.Sub.frmStatementView_UnLoad.Start
+Gui.frmStatementView..Visible(False)
+Program.Sub.frmStatementView_UnLoad.End
+
+Program.Sub.frmReview_UnLoad.Start
+f.Intrinsic.Control.End
+Program.Sub.frmReview_UnLoad.End
+
+Program.Sub.cmdGenEmail_Click.Start
+v.Local.lret.Declare(long)
+v.Local.i.Declare(long)
+v.Local.sSubject.Declare(string)
+v.Local.sCustEmail.Declare(string)
+v.Local.sAttach.Declare(string)
+v.Local.sdate.Declare(string)
+v.Local.dDateRan.Declare(date)
+
+f.Intrinsic.UI.Msgbox("Are you sure you want to generate emails for the selected statements?  Separate emails will be queued in Outlook and will be sent next time Outlook is running","Email Confirmation",4,v.Local.lret)
+f.Intrinsic.Control.If(v.Local.lret,=,6)
+	f.Intrinsic.Control.For(v.Local.i,0,v.DataTable.dtAR.RowCount--,1)
+		f.Intrinsic.Control.If(v.DataTable.dtAR(v.Local.i).Email!Fieldval)
+			v.Local.sCustEmail.Set(v.DataTable.dtAR(v.Local.i).customeremail!fieldvaltrim)
+			v.Local.sAttach.Set(v.DataTable.dtAR(v.Local.i).statement!fieldvaltrim)
+			v.Local.dDateRan.Set(v.DataTable.dtAR(v.Local.i).DateRan!FieldVal)
+			f.Intrinsic.String.Format(v.Local.dDateRan,"DD-MM-YYYY",v.Local.sdate)
+			f.Intrinsic.String.Concat("Customer Statement for ",v.DataTable.dtAR(v.Local.i).CustomerName!FieldvalTrim," ",v.Local.sdate.,v.Local.sSubject)
+			f.Automation.MSOutlook.QueueEmail(v.Local.sCustEmail,v.Local.sSubject,"",v.Local.sAttach)
+		f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.Next(v.Local.i)
+f.Intrinsic.Control.EndIf
+
+f.Intrinsic.Control.End
+Program.Sub.cmdGenEmail_Click.End
+
+Program.Sub.frmStatement_UnLoad.Start
+f.Intrinsic.Control.End
+Program.Sub.frmStatement_UnLoad.End
+
+Program.Sub.Comments.Start
+${$0$}$GCG_SJO_3529_Invoice_Email$}$SKT$}$1/8/2016 3:54:37 PM$}$False
+${$3$}$0$}$$}$0$}$-1$}$$}$12:00:00 AM$}$This project will check AR open items and gather all invoices for a customer that are dated prior to the current date.  It will then loop through all the invoice to see if there is an outstanding balance.  If there is an outstanding balance the customer is flagged to receive an Email containing the core AR statement.  This Statement will contain the details of all invoice and the amount paid along with the amount still outstanding and how late the payment is.  This will be run on the Task Scheduler once a week after hours.
+
+
+Program.Sub.Comments.End
+
